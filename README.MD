@@ -11,7 +11,6 @@ Minikube is local Kubernetes, focusing on making it easy to learn and develop fo
 To install the latest minikube stable release on x86-64 Linux using binary download. Check the following link on case of diferent machine architecture https://minikube.sigs.k8s.io/docs/start/
 
 ```
-bash
 curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
 sudo install minikube-linux-amd64 /usr/local/bin/minikube
 ```
@@ -27,18 +26,16 @@ sudo install minikube-linux-amd64 /usr/local/bin/minikube
 ### Start your cluster 🚀
 
 ```
-bash
 minikube start
 ```
 
-### 1- Monitoring with prometheus and Sending notifications to an Slack channel 🎠
+### 1- Monitoring and notifications to an Slack channel 🎠
 
 Prometheus server is responsible for send alerts of monitoring to the alert manager and this one is in charge to alert to our different integrations suach send email or slack etc.
 
 The first file is our namespace that are a way to organize clusters into virtual sub-clusters. (monitoring/namespaces.yaml)
 
 ```
-bash
 kubectl appliy -f namespace.yaml
 namespace/monitoring created ✅
 ```
@@ -48,7 +45,6 @@ namespace/monitoring created ✅
 Then we must create some role or permissions in that monitoring subcluster that we have already created. This with the objective that prometheus can access to system files such as extract metrics.
 
 ```
-bash
 kubectl apply -f prometheus-cluster-role.yaml
 clusterrole.rbac.authorization.k8s.io/prometheus created ✅
 clusterrolebinding.rbac.authorization.k8s.io/prometheus created ✅
@@ -57,7 +53,6 @@ clusterrolebinding.rbac.authorization.k8s.io/prometheus created ✅
 Also, we need to deploy our prometheus pod server that it will create our container insade base on the following image **prom/prometheus:v2.1.0** in ``monitoring``namespace and it will attach some config and storage volume in the root cluster.
 
 ```
-bash
 kubectl apply -f prometheus-cluster-role.yaml
 deployment.apps/prometheus-deployment created ✅
 ```
@@ -65,21 +60,20 @@ deployment.apps/prometheus-deployment created ✅
 Check what we have iat this moment:
 
 ```
-bash
 kubectl -n monitoring get all
 ```
 
-NAME                                  | READY|   STATUS           |RESTARTS|   AGE|
-pod/prometheus-deployment-5875b79765-nzpjp|   0/1|     ContainerCreating|   0|          2m31s|
-deployment.apps/prometheus-deployment|   0/1|     1|           0|          2m31s|
-replicaset.apps/prometheus-deployment-5875b79765|   1|         1|         0|       2m31s|
+|NAME                                  | READY|   STATUS           |RESTARTS|   AGE|
+|-------------------------------------|------|--------------------|--------|------|
+|pod/prometheus-deployment-5875b79765-nzpjp|   0/1|     ContainerCreating|   0|          2m31s|
+|deployment.apps/prometheus-deployment|   0/1|     1|           0|          2m31s|
+|replicaset.apps/prometheus-deployment-5875b79765|   1|         1|         0|       2m31s|
 
 
 *Config maps* are manifiest that you inject to an specific namespace and then whatever container running on this ns can read those configuration maps and generated its configuration base on that template (Global Enviroment Namespaces)
 
 **Basic Check of Memory Use**
 ```
-bash
 rules:
       - alert: High Pod Memory
         expr: sum(container_memory_usage_bytes) > 1
@@ -93,7 +87,6 @@ rules:
 Applying Map Configuration:
 
 ```
-bash
 kubectl apply -f prometheus-configmap.yaml
 configmap/prometheus-server-conf created ✅
 ```
@@ -101,7 +94,6 @@ configmap/prometheus-server-conf created ✅
 Creation of a service to expose our prometheus pods using a node port that basiclly open a port in the workers nodes that redirects the traffic to the pod with specific label and selector.
 
 ```
-bash
 kubectl apply -f prometheus-service.yaml 
 service/prometheus-service created ✅
 ```
