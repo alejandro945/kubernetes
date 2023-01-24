@@ -7,7 +7,7 @@ data:
   alertmanager.yml: |-
     global:
       resolve_timeout: 5m
-      slack_api_url: 'https://hooks.slack.com/services/REEMPLAZAR-CON-URL-DEL-WEBHOOK'
+      slack_api_url: 'https://hooks.slack.com/services/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'
   
     route:
       group_by: ['alertname', 'cluster', 'service']
@@ -28,6 +28,6 @@ data:
     - name: default-receiver
       slack_configs:
         - send_resolved: true
-          channel: '#alertas'
+          channel: '#alert'
           text: '{{ template "slack.default.text" . }}'
           title: "{{ range .Alerts }}{{ .Annotations.summary }}\n{{ end }}"
