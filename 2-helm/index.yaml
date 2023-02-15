@@ -1,0 +1,14 @@
+apiVersion: v1
+entries:
+  varelachart:
+  - apiVersion: v2
+    appVersion: 1.16.0
+    created: "2023-02-15T20:06:38.735675524Z"
+    description: A Helm chart for Kubernetes
+    digest: 58a2874da126e687102f770b98a52fbe0be03f77b86159b2c05f6cd4fdf237a2
+    name: varelachart
+    type: application
+    urls:
+    - charts/varelachart-0.1.0.tgz
+    version: 0.1.0
+generated: "2023-02-15T20:06:38.734541411Z"
