@@ -251,7 +251,13 @@ helm search repo varela
 
 Installation on your kubernetes cluster
 ```bash
-helm install helm varela/varelachart
+helm install test varela/varelachart
+```
+
+Delete a helm chart or list them
+```bash
+helm list
+helm delete test
 ```
 
 ## 3- Logging using grafana and loki 📌
