@@ -29,7 +29,7 @@ sudo install minikube-linux-amd64 /usr/local/bin/minikube
 minikube start
 ```
 
-## Finish your kubernetes services ✝️
+## Finish your kubernetes services 💀
 
 ```yaml
 kubectl delete all --all
@@ -60,9 +60,9 @@ kubectl apply -f prometheus-cluster-role.yaml
 
 Also, we need to deploy our prometheus pod server that it will create our container instance base on the following image **prom/prometheus:v2.1.0** in ``monitoring``namespace and it will attach some config and storage volume in the root cluster.
 
-```
+```yaml
 kubectl apply -f prometheus-cluster-role.yaml
-deployment.apps/prometheus-deployment created ✅
+# deployment.apps/prometheus-deployment created ✅
 ```
 
 Check what we have at this moment:
@@ -94,38 +94,38 @@ rules:
 
 Applying Map Configuration:
 
-```
+```yaml
 kubectl apply -f prometheus-configmap.yaml
-configmap/prometheus-server-conf created ✅
+# configmap/prometheus-server-conf created ✅
 ```
 
 Creation of a service to expose our prometheus pods using a node port that basically open a port in the workers nodes that redirects the traffic to the pod with specific label or selector.
 
-```
+```yaml
 kubectl apply -f prometheus-service.yaml 
-service/prometheus-service created ✅
+# service/prometheus-service created ✅
 ```
 
 ### Alert Manager Pod 🪝
 
 - Service creation (Cluster Ip because we want that prometheus can access to that container assigning an specific ip in the cluster)
 
-    ```
+    ```yaml
     kubectl apply -f alert-manager-service.yaml
-    service/alertmanager created ✅
+     #service/alertmanager created ✅
     ```
 
 - Deployment in this case we have a pod that will have two containers, the firts one is the alert manager and the second one a **side car** that will be watching for changes in global config map. Also, we have a Persistent Volume Claim that is a request for storage by a user. It is similar to a Pod. Pods consume node resources and PVCs consume PV resources, claims can request specific size and access modes.
 
-    ```
-    kubectl apply -f alert-manager-configmap.yaml 
-    service/alertmanager created ✅
+    ```yaml
+      kubectl apply -f alert-manager-configmap.yaml 
+      # service/alertmanager created ✅
 
-    kubectl apply -f alert-manager-pvc.yaml 
-    persistentvolumeclaim/alertmanager created ✅
+      kubectl apply -f alert-manager-pvc.yaml 
+      # persistentvolumeclaim/alertmanager created ✅
 
-    kubectl apply -f alert-manager-deployment.yaml 
-    deployment.apps/alertmanager created ✅
+      kubectl apply -f alert-manager-deployment.yaml 
+      # deployment.apps/alertmanager created ✅
     ```
 
 ### Checking all infrastructure 🏗️
@@ -155,32 +155,104 @@ service/prometheus-service created ✅
 
 Due to we are using minikube for our local kubernetes cluster we just have one node and for accesing externally we must use the following command:
 
-```bash
+```yaml
 minikube -n monitoring service prometheus-service --url
-http://192.168.49.2:30000 ⚠️
+# http://192.168.49.2:30000 ⚠️
 ```
 
 However i have my minikube configuration inside an ec2 vm hosted in aws cloud provider 😅. That is why i must port forward my vm local entry set in 31000 port and the service port 8080 of the prometheus node port:
 
-```bash
+```yaml
 kubectl port-forward --address 0.0.0.0 service/prometheus-service --namespace monitoring 31000:8080
-Forwarding from 0.0.0.0:31000 -> 9090
-Handling connection for 31000
+# Forwarding from 0.0.0.0:31000 -> 9090
+# Handling connection for 31000
 ```
 
 ### Evidences 🚧
 
-![Graphs](./assets/graph-prometheus.png)
+![Graphs](./0-assets/graph-prometheus.png)
 
-![Alerts](./assets/alerts-prometheus.png)
+![Alerts](./0-assets/alerts-prometheus.png)
 
-![Slack-Configuration](./assets/slack-config.png)
+![Slack-Configuration](./0-assets/slack-config.png)
 
-![Slack-Evidence](./assets/slack-evidence.png)
+![Slack-Evidence](./0-assets/slack-evidence.png)
 
-## 2- Liveness and Readiness 🎠
+## 2- Helm 🎠
 
-Main concept is kubernetes knowledge of your pod liveness. Also,
+It's a package manager that makes it possible to download charts, which are pre-packaged collections of all the necessary versioned, pre-configured resources required to deploy a container. Helm charts are written in YAML and contain everything your developers need to deploy a container to a Kubernetes cluster.
+
+### Installation
+
+```bash
+sudo snap install helm --classic
+```
+
+### Hosting your own charts
+
+Helm chart creation <varelachart> : *chart_name*
+```bash
+helm create varelachart
+```
+
+![Creation](./0-assets/helm_init.png)
+
+Debugging the manifiests that helm will install in our cluster
+```bash
+helm install --dry-run debug .
+```
+
+![Debug](./0-assets/helm_debug.png)
+
+Some linter guardians or constraints in our yamls files
+```bash
+helm lint
+```
+
+Creating a package of this helm chart due to we need other repositorios can use it.
+```bash
+helm package varelachart/
+mv ./varelachart-0.1.0.tgz charts/
+```
+
+![Package](./0-assets/helm_package.png)
+
+Adding your custom configurations in values.yaml file.
+
+```yaml
+healthcheck:
+  readinessProbe:
+    path: /
+    port: http
+  livenessProbe:
+    path: /
+    port: http
+```
+
+```yaml
+  path: {{.Values.healthcheck.readinessProbe.path}}
+  port: {{.Values.healthcheck.readinessProbe.path}}
+```
+
+Creation of the index file use for helm repository to know what charts are inside this package. It will look for all tgz inside the current folder and map ot into this index entrypoint. 
+```bash
+helm repo index .
+```
+
+Push your changes to your github or distributed version management and for using repository:
+```bash
+helm repo add varela https://alejandro945.github.io/kubernetes/2-helm
+```
+
+Validation of repository creation
+```bash
+helm search repo varela
+```
+
+Installation on your kubernetes cluster
+```bash
+helm install helm varela/varelachart
+```
 
 ## 3- Logging using grafana and loki 📌
 
@@ -255,12 +327,12 @@ kubectl apply -k .
 
 ### Evidences 🚧
 
-![Dashboard](./assets/grafana.png)
+![Dashboard](./0-assets/grafana.png)
 
-![Datasource](./assets/ds.png)
+![Datasource](./0-assets/ds.png)
 
-![Graphic](./assets/graphic.png)
+![Graphic](./0-assets/graphic.png)
 
-![Logs](./assets/logs.png)
+![Logs](./0-assets/logs.png)
 
-![Application](./assets/app.png)
+![Application](./0-assets/app.png)
